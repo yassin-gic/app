@@ -1,98 +1,103 @@
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        // Make sure the canvas element exists before proceeding
-        const canvas = document.getElementById('signature-pad');
-        if (!canvas) {
-            console.error("Signature pad canvas element not found");
+        // Check if fabric is defined
+        if (typeof fabric === 'undefined') {
+            console.error("Fabric.js library is not loaded");
             return;
         }
 
-        // Check if SignaturePad is defined
-        if (typeof SignaturePad === 'undefined') {
-            console.error("SignaturePad library not loaded");
+        // Get canvas element
+        const canvasElement = document.getElementById('signature-canvas');
+        if (!canvasElement) {
+            console.error("Signature canvas element not found");
             return;
         }
 
-        // Initialize signature pad with error handling
-        let signaturePad;
-        try {
-            signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
-                penColor: 'rgb(0, 0, 0)',
-                minWidth: 1,
-                maxWidth: 3
-            });
-        } catch (error) {
-            console.error("Error initializing SignaturePad:", error);
-            return;
-        }
+        // Get the container dimensions
+        const container = document.getElementById('signature-canvas-container');
+        const containerWidth = container.clientWidth;
+        const containerHeight = 300; // Fixed height for the canvas
 
-        // Handle canvas resizing with error handling
-        function resizeCanvas() {
-            try {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                    ctx.scale(ratio, ratio);
-                }
-                if (signaturePad) {
-                    signaturePad.clear(); // Otherwise the canvas will be cleared
-                }
-            } catch (error) {
-                console.error("Error resizing canvas:", error);
-            }
-        }
-        
-        // Set the initial canvas size
-        resizeCanvas();
-        
-        // Resize canvas when window changes size
-        window.addEventListener('resize', resizeCanvas);
-        
+        // Set canvas dimensions
+        canvasElement.width = containerWidth;
+        canvasElement.height = containerHeight;
+
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('signature-canvas', {
+            isDrawingMode: true,
+            width: containerWidth,
+            height: containerHeight,
+            backgroundColor: 'white'
+        });
+
+        // Configure drawing brush
+        canvas.freeDrawingBrush.width = 2;
+        canvas.freeDrawingBrush.color = '#000000';
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const newWidth = container.clientWidth;
+            canvas.setWidth(newWidth);
+            canvas.renderAll();
+        });
+
         // Clear signature button
         const clearButton = document.getElementById('clear-signature');
         if (clearButton) {
             clearButton.addEventListener('click', function() {
-                if (signaturePad) {
-                    signaturePad.clear();
+                canvas.clear();
+                canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
+                
+                const previewImg = document.getElementById('signature-preview');
+                if (previewImg) {
+                    previewImg.style.display = 'none';
+                }
+                
+                const signatureData = document.getElementById('signature-data');
+                if (signatureData) {
+                    signatureData.value = '';
+                }
+            });
+        }
+
+        // Preview signature button
+        const previewButton = document.getElementById('preview-signature');
+        if (previewButton) {
+            previewButton.addEventListener('click', function() {
+                updateSignatureData();
+            });
+        }
+
+        // Update signature data in the hidden field and show preview
+        function updateSignatureData() {
+            try {
+                if (canvas.getObjects().length > 0) {
+                    // Get data URL of the canvas
+                    const signatureData = canvas.toDataURL({
+                        format: 'png',
+                        quality: 1
+                    });
+                    
+                    // Set the data in the hidden field
+                    const signatureDataInput = document.getElementById('signature-data');
+                    if (signatureDataInput) {
+                        signatureDataInput.value = signatureData;
+                    }
+                    
+                    // Show the preview
                     const previewImg = document.getElementById('signature-preview');
                     if (previewImg) {
-                        previewImg.style.display = 'none';
+                        previewImg.src = signatureData;
+                        previewImg.style.display = 'block';
                     }
-                    const signatureData = document.getElementById('signature-data');
-                    if (signatureData) {
-                        signatureData.value = '';
-                    }
+                } else {
+                    alert('Please draw your signature first');
                 }
-            });
+            } catch (error) {
+                console.error("Error creating signature data:", error);
+            }
         }
-        
-        // Preview signature when created - Use more compatible event pattern
-        if (signaturePad) {
-            signaturePad.addEventListener('endStroke', function() {
-                try {
-                    if (!signaturePad.isEmpty()) {
-                        const signatureData = signaturePad.toDataURL('image/png');
-                        const signatureDataInput = document.getElementById('signature-data');
-                        const previewImg = document.getElementById('signature-preview');
-                        
-                        if (signatureDataInput) {
-                            signatureDataInput.value = signatureData;
-                        }
-                        
-                        if (previewImg) {
-                            previewImg.src = signatureData;
-                            previewImg.style.display = 'block';
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error handling signature end stroke:", error);
-                }
-            });
-        }
-    
+
         // Form submission
         const signatureForm = document.getElementById('signature-form');
         if (signatureForm) {
@@ -113,8 +118,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                if (signaturePad.isEmpty()) {
+                // Update signature data before submission
+                if (canvas.getObjects().length === 0) {
                     alert('Please provide a signature');
+                    return;
+                }
+                
+                // Get updated signature data
+                updateSignatureData();
+                
+                const signatureDataInput = document.getElementById('signature-data');
+                if (!signatureDataInput || !signatureDataInput.value) {
+                    alert('Error capturing signature. Please try again.');
                     return;
                 }
                 
@@ -123,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('name', name);
                 formData.append('title', document.getElementById('title').value.trim());
                 formData.append('jobId', jobId);
-                formData.append('signatureData', signaturePad.toDataURL('image/png'));
+                formData.append('signatureData', signatureDataInput.value);
                 
                 // Append certificate if provided
                 const certificateInput = document.getElementById('certificate');
@@ -155,7 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Reset form
                     document.getElementById('signature-form').reset();
-                    signaturePad.clear();
+                    canvas.clear();
+                    canvas.setBackgroundColor('white', canvas.renderAll.bind(canvas));
                     document.getElementById('signature-preview').style.display = 'none';
                 })
                 .catch(error => {
