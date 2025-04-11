@@ -7,8 +7,11 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 from io import BytesIO
 import PyPDF2 
-from app import app, db
-from models import Job, Signature, Upload
+from app import app
+import data_store as ds
+
+# Initialize demo data
+ds.add_demo_data()
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx'}
 
@@ -23,7 +26,9 @@ def index():
 # Job management routes
 @app.route('/jobs')
 def list_jobs():
-    jobs = Job.query.order_by(Job.created_at.desc()).all()
+    jobs = ds.get_all_jobs()
+    # Sort jobs by created_at in descending order
+    jobs = sorted(jobs, key=lambda j: j['created_at'], reverse=True)
     return render_template('jobs.html', jobs=jobs)
 
 @app.route('/jobs/new', methods=['POST'])
@@ -35,37 +40,37 @@ def create_job():
         if not title:
             return jsonify({'error': 'Job title is required'}), 400
         
-        job = Job(title=title, description=description, status='pending')
-        db.session.add(job)
-        db.session.commit()
+        job = ds.create_job(title, description)
         
         return jsonify({
-            'id': job.id,
-            'title': job.title,
-            'description': job.description,
-            'status': job.status,
-            'created_at': job.created_at.isoformat()
+            'id': job['id'],
+            'title': job['title'],
+            'description': job['description'],
+            'status': job['status'],
+            'created_at': job['created_at']
         })
 
 @app.route('/jobs/<int:job_id>', methods=['GET'])
 def get_job(job_id):
-    job = Job.query.get_or_404(job_id)
-    signatures = Signature.query.filter_by(job_id=job_id).all()
-    uploads = Upload.query.filter_by(job_id=job_id).all()
+    job = ds.get_job_by_id(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
+        
+    signatures = ds.get_signatures_by_job_id(job_id)
+    uploads = ds.get_uploads_by_job_id(job_id)
     
     return jsonify({
-        'id': job.id,
-        'title': job.title,
-        'description': job.description,
-        'status': job.status,
-        'created_at': job.created_at.isoformat(),
-        'signatures': [{'id': s.id, 'name': s.name, 'date': s.date.isoformat()} for s in signatures],
-        'uploads': [{'id': u.id, 'filename': u.original_filename, 'date': u.upload_date.isoformat()} for u in uploads]
+        'id': job['id'],
+        'title': job['title'],
+        'description': job['description'],
+        'status': job['status'],
+        'created_at': job['created_at'],
+        'signatures': [{'id': s['id'], 'name': s['name'], 'date': s['date']} for s in signatures],
+        'uploads': [{'id': u['id'], 'filename': u['original_filename'], 'date': u['upload_date']} for u in uploads]
     })
 
 @app.route('/jobs/<int:job_id>/status', methods=['PUT'])
 def update_job_status(job_id):
-    job = Job.query.get_or_404(job_id)
     data = request.json
     
     if 'status' not in data:
@@ -75,22 +80,28 @@ def update_job_status(job_id):
     if data['status'] not in valid_statuses:
         return jsonify({'error': f'Status must be one of: {", ".join(valid_statuses)}'}), 400
     
-    job.status = data['status']
-    job.updated_at = datetime.utcnow()
-    db.session.commit()
+    job = ds.update_job_status(job_id, data['status'])
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
     
     return jsonify({
-        'id': job.id,
-        'title': job.title,
-        'status': job.status,
-        'updated_at': job.updated_at.isoformat()
+        'id': job['id'],
+        'title': job['title'],
+        'status': job['status'],
+        'updated_at': job['updated_at']
     })
 
 # Signature routes
 @app.route('/signature')
 def signature_page():
     job_id = request.args.get('job_id')
-    jobs = Job.query.all()
+    if job_id:
+        try:
+            job_id = int(job_id)
+        except ValueError:
+            job_id = None
+            
+    jobs = ds.get_all_jobs()
     return render_template('signature.html', job_id=job_id, jobs=jobs)
 
 @app.route('/signature/save', methods=['POST'])
@@ -100,18 +111,13 @@ def save_signature():
     if 'signatureData' not in data or 'name' not in data or 'jobId' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     
-    job_id = data.get('jobId')
+    job_id = int(data.get('jobId'))
     # Verify job exists
-    job = Job.query.get_or_404(job_id)
+    job = ds.get_job_by_id(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
     
-    # Save signature to database
-    signature = Signature(
-        signature_data=data.get('signatureData'),
-        name=data.get('name'),
-        title=data.get('title', ''),
-        job_id=job_id
-    )
-    
+    certificate_path = None
     # Handle certificate if provided
     if 'certificate' in request.files:
         certificate_file = request.files['certificate']
@@ -122,46 +128,62 @@ def save_signature():
             cert_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             certificate_file.save(cert_path)
             
-            # Save certificate path to signature
-            signature.certificate_path = unique_filename
+            # Save certificate path
+            certificate_path = unique_filename
     
-    db.session.add(signature)
-    db.session.commit()
+    # Save signature
+    signature = ds.create_signature(
+        name=data.get('name'),
+        job_id=job_id,
+        signature_data=data.get('signatureData'),
+        title=data.get('title', ''),
+        certificate_path=certificate_path
+    )
     
     return jsonify({
-        'id': signature.id,
-        'name': signature.name,
-        'date': signature.date.isoformat(),
+        'id': signature['id'],
+        'name': signature['name'],
+        'date': signature['date'],
         'message': 'Signature saved successfully'
     })
 
 @app.route('/signature/<int:signature_id>')
 def get_signature(signature_id):
-    signature = Signature.query.get_or_404(signature_id)
+    signature = ds.get_signature_by_id(signature_id)
+    if not signature:
+        return jsonify({'error': 'Signature not found'}), 404
     
     return jsonify({
-        'id': signature.id,
-        'name': signature.name,
-        'title': signature.title,
-        'date': signature.date.isoformat(),
-        'signature_data': signature.signature_data,
-        'has_certificate': bool(signature.certificate_path)
+        'id': signature['id'],
+        'name': signature['name'],
+        'title': signature['title'],
+        'date': signature['date'],
+        'signature_data': signature['signature_data'],
+        'has_certificate': bool(signature['certificate_path'])
     })
 
 @app.route('/signature/<int:signature_id>/certificate')
 def get_certificate(signature_id):
-    signature = Signature.query.get_or_404(signature_id)
+    signature = ds.get_signature_by_id(signature_id)
+    if not signature:
+        return jsonify({'error': 'Signature not found'}), 404
     
-    if not signature.certificate_path:
+    if not signature['certificate_path']:
         return jsonify({'error': 'No certificate found for this signature'}), 404
     
-    return send_from_directory(app.config['UPLOAD_FOLDER'], signature.certificate_path)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], signature['certificate_path'])
 
 # Upload routes
 @app.route('/upload')
 def upload_page():
     job_id = request.args.get('job_id')
-    jobs = Job.query.all()
+    if job_id:
+        try:
+            job_id = int(job_id)
+        except ValueError:
+            job_id = None
+            
+    jobs = ds.get_all_jobs()
     return render_template('upload.html', job_id=job_id, jobs=jobs)
 
 @app.route('/upload/file', methods=['POST'])
@@ -173,8 +195,15 @@ def upload_file():
     if not job_id:
         return jsonify({'error': 'Job ID is required'}), 400
     
+    try:
+        job_id = int(job_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid job ID'}), 400
+    
     # Verify job exists
-    job = Job.query.get_or_404(job_id)
+    job = ds.get_job_by_id(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
     
     file = request.files['file']
     if file.filename == '':
@@ -190,23 +219,20 @@ def upload_file():
         file_extension = original_filename.rsplit('.', 1)[1].lower()
         file_type = 'image' if file_extension in ['png', 'jpg', 'jpeg', 'gif'] else 'document'
         
-        # Save upload to database
-        upload = Upload(
+        # Save upload
+        upload = ds.create_upload(
+            job_id=job_id,
             filename=filename,
             original_filename=original_filename,
             file_path=file_path,
-            file_type=file_type,
-            job_id=job_id
+            file_type=file_type
         )
         
-        db.session.add(upload)
-        db.session.commit()
-        
         return jsonify({
-            'id': upload.id,
-            'filename': upload.original_filename,
-            'file_type': upload.file_type,
-            'date': upload.upload_date.isoformat(),
+            'id': upload['id'],
+            'filename': upload['original_filename'],
+            'file_type': upload['file_type'],
+            'date': upload['upload_date'],
             'message': 'File uploaded successfully'
         })
     
@@ -214,13 +240,13 @@ def upload_file():
 
 @app.route('/uploads/<int:job_id>')
 def get_uploads(job_id):
-    uploads = Upload.query.filter_by(job_id=job_id).all()
+    uploads = ds.get_uploads_by_job_id(job_id)
     
     return jsonify([{
-        'id': upload.id,
-        'filename': upload.original_filename,
-        'file_type': upload.file_type,
-        'date': upload.upload_date.isoformat()
+        'id': upload['id'],
+        'filename': upload['original_filename'],
+        'file_type': upload['file_type'],
+        'date': upload['upload_date']
     } for upload in uploads])
 
 @app.route('/uploads/file/<filename>')
@@ -229,14 +255,16 @@ def uploaded_file(filename):
 
 @app.route('/uploads/<int:upload_id>/preview')
 def file_preview(upload_id):
-    upload = Upload.query.get_or_404(upload_id)
+    upload = ds.get_upload_by_id(upload_id)
+    if not upload:
+        return jsonify({'error': 'Upload not found'}), 404
     
     # For images, we can return directly
-    if upload.file_type == 'image':
-        return redirect(url_for('uploaded_file', filename=upload.filename))
+    if upload['file_type'] == 'image':
+        return redirect(url_for('uploaded_file', filename=upload['filename']))
     
     # For PDFs, we might want to return the first page as an image
-    if upload.original_filename.endswith('.pdf'):
+    if upload['original_filename'].endswith('.pdf'):
         # This would be implemented with PyPDF2 to extract the first page
         # as an image and return it
         pass

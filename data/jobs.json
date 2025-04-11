@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Website Redesign",
+    "description": "Redesign company website with new branding",
+    "status": "pending",
+    "created_at": "2025-04-11T12:06:38.215002",
+    "updated_at": "2025-04-11T12:06:38.215002"
+  },
+  {
+    "id": 2,
+    "title": "Mobile App Development",
+    "description": "Develop a new mobile app for client tracking",
+    "status": "pending",
+    "created_at": "2025-04-11T12:06:38.215227",
+    "updated_at": "2025-04-11T12:06:38.215227"
+  },
+  {
+    "id": 3,
+    "title": "Logo Design",
+    "description": "Create a new logo for ABC Corp",
+    "status": "pending",
+    "created_at": "2025-04-11T12:06:38.215434",
+    "updated_at": "2025-04-11T12:06:38.215434"
+  }
+]
