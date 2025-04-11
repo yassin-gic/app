@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": 1,
+    "job_id": 2,
+    "filename": "3d7d433f-ce74-4942-8092-777b264187f8_nexus.png",
+    "original_filename": "nexus.png",
+    "file_path": "static/uploads/3d7d433f-ce74-4942-8092-777b264187f8_nexus.png",
+    "file_type": "image",
+    "upload_date": "2025-04-11T12:10:15.641527"
+  }
+]
