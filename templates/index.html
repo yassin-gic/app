@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Signature App - Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body text-center p-5">
+                <h1 class="display-4 mb-4">Digital Signature App</h1>
+                <p class="lead">A comprehensive solution for managing digital signatures, certificates, and document uploads.</p>
+                <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-4">
+                    <a href="{{ url_for('list_jobs') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tasks me-2"></i> Manage Jobs
+                    </a>
+                    <a href="{{ url_for('signature_page') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-pen-fancy me-2"></i> Create Signature
+                    </a>
+                    <a href="{{ url_for('upload_page') }}" class="btn btn-info btn-lg">
+                        <i class="fas fa-upload me-2"></i> Upload Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-signature fa-3x mb-3 text-primary"></i>
+                        <h5 class="card-title">Digital Signatures</h5>
+                        <p class="card-text">Create and manage digital signatures with certificate support.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file-image fa-3x mb-3 text-info"></i>
+                        <h5 class="card-title">Document Uploads</h5>
+                        <p class="card-text">Upload and manage documents and images for your jobs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tasks fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title">Job Tracking</h5>
+                        <p class="card-text">Track job status and manage assignments efficiently.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered mb-0">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Create a Job</div>
+                            Start by creating a new job to organize your signatures and documents
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Upload Documents</div>
+                            Add relevant documents and images to your job
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Sign Documents</div>
+                            Create digital signatures and attach certificates
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Track Progress</div>
+                            Update job status and track completion
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

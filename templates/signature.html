@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Signature{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+<style>
+    #signature-pad {
+        width: 100%;
+        height: 300px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .signature-controls {
+        margin-top: 10px;
+    }
+    .signature-preview {
+        max-width: 100%;
+        border: 1px solid #ddd;
+        margin-top: 15px;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Digital Signature</h4>
+            </div>
+            <div class="card-body">
+                <form id="signature-form">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Title/Position</label>
+                            <input type="text" class="form-control" id="title" name="title">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="job-select" class="form-label">Job <span class="text-danger">*</span></label>
+                        <select class="form-select" id="job-select" name="jobId" required>
+                            <option value="" selected disabled>Select a job</option>
+                            {% for job in jobs %}
+                            <option value="{{ job.id }}" {% if job_id and job_id|int == job.id %}selected{% endif %}>
+                                #{{ job.id }} - {{ job.title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Signature <span class="text-danger">*</span></label>
+                        <div id="signature-pad"></div>
+                        <div class="signature-controls">
+                            <button type="button" class="btn btn-secondary btn-sm" id="clear-signature">
+                                <i class="fas fa-eraser me-1"></i> Clear
+                            </button>
+                        </div>
+                        <img id="signature-preview" class="signature-preview mt-3" alt="Signature Preview" />
+                        <input type="hidden" id="signature-data" name="signatureData">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="certificate" class="form-label">Certificate (PDF)</label>
+                        <input type="file" class="form-control" id="certificate" name="certificate" accept=".pdf">
+                        <div class="form-text">Attach a PDF certificate to your signature (optional)</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="save-signature">
+                            <i class="fas fa-save me-1"></i> Save Signature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h4 class="mb-0">How to Use</h4>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered mb-0">
+                    <li class="list-group-item">Enter your full name and title/position</li>
+                    <li class="list-group-item">Select the job associated with this signature</li>
+                    <li class="list-group-item">Sign in the signature pad area using your finger or mouse</li>
+                    <li class="list-group-item">Optionally upload a certificate PDF</li>
+                    <li class="list-group-item">Click the "Save Signature" button to store your signature</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Signature Saved</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success mb-0" role="alert">
+                    Your signature has been successfully saved!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('list_jobs') }}" class="btn btn-primary">Go to Jobs</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/signature.js') }}"></script>
+{% endblock %}

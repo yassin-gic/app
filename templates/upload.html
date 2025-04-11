@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Documents{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Document Upload</h4>
+            </div>
+            <div class="card-body">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="job-select" class="form-label">Job <span class="text-danger">*</span></label>
+                        <select class="form-select" id="job-select" name="jobId" required>
+                            <option value="" selected disabled>Select a job</option>
+                            {% for job in jobs %}
+                            <option value="{{ job.id }}" {% if job_id and job_id|int == job.id %}selected{% endif %}>
+                                #{{ job.id }} - {{ job.title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="file-upload" class="form-label">File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="file-upload" name="file" required>
+                        <div class="form-text">Accepted formats: PNG, JPG, PDF, DOC, DOCX (Max: 16MB)</div>
+                    </div>
+                    
+                    <div id="preview-container" class="mb-3 d-none">
+                        <label class="form-label">Preview</label>
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <img id="image-preview" class="img-fluid mb-2 d-none" alt="Image Preview">
+                                <div id="file-info" class="d-none">
+                                    <i id="file-icon" class="fas fa-file fa-3x mb-2"></i>
+                                    <p id="file-name" class="mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="upload-btn">
+                            <i class="fas fa-upload me-1"></i> Upload Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm" id="job-uploads-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Job Uploads</h4>
+                <span class="badge bg-primary" id="upload-count">0</span>
+            </div>
+            <div class="card-body">
+                <div id="uploads-container" class="row row-cols-1 row-cols-md-3 g-4">
+                    <div class="col text-center" id="no-uploads-message">
+                        <p class="text-muted">No uploads for this job yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Upload Successful</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success mb-0" role="alert">
+                    Your file has been successfully uploaded!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('list_jobs') }}" class="btn btn-primary">Go to Jobs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">File Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modal-image-preview" class="img-fluid" alt="File Preview">
+                <div id="modal-file-info" class="d-none">
+                    <i class="fas fa-file-pdf fa-4x mb-3"></i>
+                    <p class="mb-0" id="modal-file-name"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="download-link" href="#" class="btn btn-primary" download>
+                    <i class="fas fa-download me-1"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
