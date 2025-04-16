@@ -9,5 +9,16 @@
     "status": "approved",
     "created_at": "2025-04-16T06:52:43.739439",
     "updated_at": "2025-04-16T06:52:43.739451"
+  },
+  {
+    "id": 2,
+    "dni": "2136268317",
+    "email": "compania@sa.org",
+    "full_name": "yassine amine",
+    "password_hash": "scrypt:32768:8:1$K3BdY4Bx48gDIHmW$6011a79adaf84a2a70178b11d825e0a0db00a073c03947d91515bf6058f7e9beea21f6f85c83e9c3f40664b1078c219822603ac78383ba0d64f878e17d8badc8",
+    "is_admin": false,
+    "status": "pending",
+    "created_at": "2025-04-16T06:56:03.294531",
+    "updated_at": "2025-04-16T06:56:03.294544"
   }
 ]
