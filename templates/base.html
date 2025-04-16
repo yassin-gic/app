@@ -17,7 +17,7 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="fas fa-signature me-2"></i>
-                Digital Signature App
+                Firma digital GIC
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -31,17 +31,17 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == url_for('list_jobs') %}active{% endif %}" href="{{ url_for('list_jobs') }}">
-                            <i class="fas fa-tasks me-1"></i> Jobs
+                            <i class="fas fa-tasks me-1"></i> Incidencias asignadas
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == url_for('signature_page') %}active{% endif %}" href="{{ url_for('signature_page') }}">
-                            <i class="fas fa-pen-fancy me-1"></i> Sign
+                            <i class="fas fa-pen-fancy me-1"></i> Firmar
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == url_for('upload_page') %}active{% endif %}" href="{{ url_for('upload_page') }}">
-                            <i class="fas fa-upload me-1"></i> Upload
+                            <i class="fas fa-upload me-1"></i> Subir documentos
                         </a>
                     </li>
                 </ul>
@@ -66,7 +66,7 @@
 
     <footer class="footer mt-5 py-3 bg-dark">
         <div class="container text-center">
-            <span class="text-muted">Digital Signature App &copy; 2025</span>
+            <span class="text-muted">App firma digital &copy; 2025</span>
         </div>
     </footer>
 

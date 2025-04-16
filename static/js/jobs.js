@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const jobsTableBody = document.getElementById('jobs-table-body');
     
     // Create new job
-    saveJobBtn.addEventListener('click', function() {
+    if (saveJobBtn) { // Check if the button exists before adding listener
+        saveJobBtn.addEventListener('click', function() {
         const title = document.getElementById('job-title').value.trim();
         const description = document.getElementById('job-description').value.trim();
         
@@ -102,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveJobBtn.innerHTML = 'Create Job';
         });
     });
+    }
     
     // View job details
     document.addEventListener('click', function(e) {
@@ -124,14 +126,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load job details
     function loadJobDetails(jobId) {
+        console.log('Loading job details for ID:', jobId);
+        
+        // Get the elements from the modal
+        const jobTitleEl = document.getElementById('detail-job-title');
+        const jobIdEl = document.getElementById('detail-job-id');
+        const jobStatusEl = document.getElementById('detail-job-status');
+        const jobCreatedEl = document.getElementById('detail-job-created');
+        const jobDescriptionEl = document.getElementById('detail-job-description');
+        const signaturesListEl = document.getElementById('detail-signatures-list');
+        const uploadsListEl = document.getElementById('detail-uploads-list');
+        
+        // Check if all elements exist
+        if (!jobTitleEl || !jobIdEl || !jobStatusEl || !jobCreatedEl || 
+            !jobDescriptionEl || !signaturesListEl || !uploadsListEl) {
+            console.error('Missing modal elements');
+            return;
+        }
+        
         // Show loading state
-        document.getElementById('detail-job-title').textContent = 'Loading...';
-        document.getElementById('detail-job-id').textContent = '';
-        document.getElementById('detail-job-status').textContent = '';
-        document.getElementById('detail-job-created').textContent = '';
-        document.getElementById('detail-job-description').textContent = '';
-        document.getElementById('detail-signatures-list').innerHTML = '<li class="list-group-item text-center">Loading...</li>';
-        document.getElementById('detail-uploads-list').innerHTML = '<li class="list-group-item text-center">Loading...</li>';
+        jobTitleEl.textContent = 'Loading...';
+        jobIdEl.textContent = '';
+        jobStatusEl.textContent = '';
+        jobCreatedEl.textContent = '';
+        jobDescriptionEl.textContent = '';
+        signaturesListEl.innerHTML = '<li class="list-group-item text-center">Loading...</li>';
+        uploadsListEl.innerHTML = '<li class="list-group-item text-center">Loading...</li>';
         
         fetch(`/jobs/${jobId}`)
             .then(response => {
@@ -141,9 +161,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(job => {
+                console.log('Job details received:', job);
+                
                 // Update modal with job details
-                document.getElementById('detail-job-id').textContent = '#' + job.id;
-                document.getElementById('detail-job-title').textContent = job.title;
+                jobIdEl.textContent = '#' + job.id;
+                jobTitleEl.textContent = job.title;
                 
                 // Format status
                 let statusHTML = '';
@@ -154,23 +176,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (job.status === 'completed') {
                     statusHTML = '<span class="badge bg-success">Completed</span>';
                 }
-                document.getElementById('detail-job-status').innerHTML = statusHTML;
+                jobStatusEl.innerHTML = statusHTML;
                 
                 // Format created date
                 const createdDate = new Date(job.created_at);
-                document.getElementById('detail-job-created').textContent = createdDate.toLocaleDateString() + ' ' + 
-                                                                           createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                jobCreatedEl.textContent = createdDate.toLocaleDateString() + ' ' + 
+                                          createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
-                document.getElementById('detail-job-description').textContent = job.description || 'No description';
+                jobDescriptionEl.textContent = job.description || 'No description';
                 
                 // Update URLs for signature and upload links
-                document.getElementById('detail-sign-link').href = `/signature?job_id=${job.id}`;
-                document.getElementById('detail-upload-link').href = `/upload?job_id=${job.id}`;
+                const signLinkEl = document.getElementById('detail-sign-link');
+                const uploadLinkEl = document.getElementById('detail-upload-link');
+                
+                if (signLinkEl) signLinkEl.href = `/signature?job_id=${job.id}`;
+                if (uploadLinkEl) uploadLinkEl.href = `/upload?job_id=${job.id}`;
                 
                 // Display signatures
-                const signaturesListElement = document.getElementById('detail-signatures-list');
                 if (job.signatures && job.signatures.length > 0) {
-                    signaturesListElement.innerHTML = '';
+                    signaturesListEl.innerHTML = '';
                     job.signatures.forEach(signature => {
                         const signatureDate = new Date(signature.date);
                         const formattedDate = signatureDate.toLocaleDateString();
@@ -186,51 +210,55 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="fas fa-eye"></i>
                             </a>
                         `;
-                        signaturesListElement.appendChild(li);
+                        signaturesListEl.appendChild(li);
                     });
                 } else {
-                    signaturesListElement.innerHTML = '<li class="list-group-item text-center">No signatures yet</li>';
+                    signaturesListEl.innerHTML = '<li class="list-group-item text-center">No signatures yet</li>';
                 }
-                
                 // Display uploads
-                const uploadsListElement = document.getElementById('detail-uploads-list');
                 if (job.uploads && job.uploads.length > 0) {
-                    uploadsListElement.innerHTML = '';
+                    uploadsListEl.innerHTML = '';
                     job.uploads.forEach(upload => {
-                        const uploadDate = new Date(upload.date);
-                        const formattedDate = uploadDate.toLocaleDateString();
-                        
-                        let fileIcon = 'fa-file';
-                        if (upload.filename.endsWith('.pdf')) {
-                            fileIcon = 'fa-file-pdf';
-                        } else if (upload.filename.endsWith('.jpg') || upload.filename.endsWith('.png') || 
-                                  upload.filename.endsWith('.jpeg') || upload.filename.endsWith('.gif')) {
-                            fileIcon = 'fa-file-image';
-                        } else if (upload.filename.endsWith('.doc') || upload.filename.endsWith('.docx')) {
-                            fileIcon = 'fa-file-word';
+                        try {
+                            const uploadDate = new Date(upload.date);
+                            const formattedDate = uploadDate.toLocaleDateString();
+                            
+                            let fileIcon = 'fa-file';
+                            if (upload.filename.endsWith('.pdf')) {
+                                fileIcon = 'fa-file-pdf';
+                            } else if (upload.filename.endsWith('.jpg') || upload.filename.endsWith('.png') || 
+                                      upload.filename.endsWith('.jpeg') || upload.filename.endsWith('.gif')) {
+                                fileIcon = 'fa-file-image';
+                            } else if (upload.filename.endsWith('.doc') || upload.filename.endsWith('.docx')) {
+                                fileIcon = 'fa-file-word';
+                            }
+                            
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            li.innerHTML = `
+                                <div>
+                                    <i class="fas ${fileIcon} me-2"></i>
+                                    <strong>${upload.filename || upload.original_filename}</strong>
+                                    <br><small class="text-muted">Uploaded: ${formattedDate}</small>
+                                </div>
+                                <a href="/uploads/file/${upload.filename}" class="btn btn-sm btn-outline-primary" download>
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            `;
+                            uploadsListEl.appendChild(li);
+                        } catch(e) {
+                            console.error('Error processing upload:', upload, e);
                         }
-                        
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        li.innerHTML = `
-                            <div>
-                                <i class="fas ${fileIcon} me-2"></i>
-                                <strong>${upload.filename}</strong>
-                                <br><small class="text-muted">Uploaded: ${formattedDate}</small>
-                            </div>
-                            <a href="/uploads/file/${upload.filename}" class="btn btn-sm btn-outline-primary" download>
-                                <i class="fas fa-download"></i>
-                            </a>
-                        `;
-                        uploadsListElement.appendChild(li);
                     });
                 } else {
-                    uploadsListElement.innerHTML = '<li class="list-group-item text-center">No uploads yet</li>';
+                    uploadsListEl.innerHTML = '<li class="list-group-item text-center">No uploads yet</li>';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('detail-job-title').textContent = 'Error loading job details';
+                if (jobTitleEl) {
+                    jobTitleEl.textContent = 'Error loading job details';
+                }
             });
     }
     

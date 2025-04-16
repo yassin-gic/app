@@ -8,9 +8,9 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Job Management</h4>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newJobModal">
+                <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newJobModal">
                     <i class="fas fa-plus me-1"></i> New Job
-                </button>
+                </button> -->
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -18,10 +18,10 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Title</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th>Titulo</th>
+                                <th>Estado</th>
+                                <th>Creado en</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="jobs-table-body">
@@ -51,11 +51,11 @@
                                         </button>
                                         <div class="dropdown-menu status-dropdown">
                                             <a class="dropdown-item status-option" href="#" 
-                                               data-job-id="{{ job.id }}" data-status="pending">Pending</a>
+                                               data-job-id="{{ job.id }}" data-status="pending">Pendiente</a>
                                             <a class="dropdown-item status-option" href="#" 
-                                               data-job-id="{{ job.id }}" data-status="in_progress">In Progress</a>
+                                               data-job-id="{{ job.id }}" data-status="in_progress">En progreso</a>
                                             <a class="dropdown-item status-option" href="#" 
-                                               data-job-id="{{ job.id }}" data-status="completed">Completed</a>
+                                               data-job-id="{{ job.id }}" data-status="completed">Completado</a>
                                         </div>
                                         <a href="{{ url_for('signature_page', job_id=job.id) }}" class="btn btn-outline-info">
                                             <i class="fas fa-signature"></i>
@@ -68,7 +68,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">No jobs found. Create your first job!</td>
+                                <td colspan="5" class="text-center">No se han encontrado incidencias.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -80,7 +80,7 @@
 </div>
 
 <!-- New Job Modal -->
-<div class="modal fade" id="newJobModal" tabindex="-1" aria-labelledby="newJobModalLabel" aria-hidden="true">
+<!-- <div class="modal fade" id="newJobModal" tabindex="-1" aria-labelledby="newJobModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -105,57 +105,57 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <!-- Job Detail Modal -->
 <div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="jobDetailModalLabel">Job Details</h5>
+                <h5 class="modal-title" id="jobDetailModalLabel">Detalles de la incidencia</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Job Information</h6>
+                        <h6>Información de trabajo</h6>
                         <dl class="row">
                             <dt class="col-sm-4">ID:</dt>
                             <dd class="col-sm-8" id="detail-job-id"></dd>
                             
-                            <dt class="col-sm-4">Title:</dt>
+                            <dt class="col-sm-4">Titulo:</dt>
                             <dd class="col-sm-8" id="detail-job-title"></dd>
                             
-                            <dt class="col-sm-4">Status:</dt>
+                            <dt class="col-sm-4">Estado:</dt>
                             <dd class="col-sm-8" id="detail-job-status"></dd>
                             
-                            <dt class="col-sm-4">Created:</dt>
+                            <dt class="col-sm-4">Creado en:</dt>
                             <dd class="col-sm-8" id="detail-job-created"></dd>
                             
-                            <dt class="col-sm-4">Description:</dt>
+                            <dt class="col-sm-4">Descripcion:</dt>
                             <dd class="col-sm-8" id="detail-job-description"></dd>
                         </dl>
                     </div>
                     <div class="col-md-6">
-                        <h6>Signatures</h6>
+                        <h6>Firmas</h6>
                         <ul class="list-group mb-3" id="detail-signatures-list">
-                            <li class="list-group-item text-center">No signatures yet</li>
+                            <li class="list-group-item text-center">Sin firmas todavía.</li>
                         </ul>
                         
-                        <h6>Uploads</h6>
+                        <h6>Archivos subidos</h6>
                         <ul class="list-group" id="detail-uploads-list">
-                            <li class="list-group-item text-center">No uploads yet</li>
+                            <li class="list-group-item text-center">No hay archivos subidos.</li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <a id="detail-sign-link" href="#" class="btn btn-primary">
-                    <i class="fas fa-signature me-1"></i> Add Signature
+                    <i class="fas fa-signature me-1"></i> Añadir firma
                 </a>
                 <a id="detail-upload-link" href="#" class="btn btn-info">
-                    <i class="fas fa-upload me-1"></i> Upload File
+                    <i class="fas fa-upload me-1"></i> Subir archivos
                 </a>
             </div>
         </div>
