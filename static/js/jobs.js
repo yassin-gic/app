@@ -170,11 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Format status
                 let statusHTML = '';
                 if (job.status === 'pending') {
-                    statusHTML = '<span class="badge bg-warning">Pending</span>';
+                    statusHTML = '<span class="badge bg-warning">Pendiente</span>';
                 } else if (job.status === 'in_progress') {
-                    statusHTML = '<span class="badge bg-info">In Progress</span>';
+                    statusHTML = '<span class="badge bg-info">En progreso</span>';
                 } else if (job.status === 'completed') {
-                    statusHTML = '<span class="badge bg-success">Completed</span>';
+                    statusHTML = '<span class="badge bg-success">Completado</span>';
                 }
                 jobStatusEl.innerHTML = statusHTML;
                 

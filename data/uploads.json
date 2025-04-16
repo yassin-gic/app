@@ -7,5 +7,14 @@
     "file_path": "static/uploads/3d7d433f-ce74-4942-8092-777b264187f8_nexus.png",
     "file_type": "image",
     "upload_date": "2025-04-11T12:10:15.641527"
+  },
+  {
+    "id": 2,
+    "job_id": 3,
+    "filename": "11e98a0d-f54c-4ab7-9a8d-2c407cdc7429_informe_general_fecha-2025-04-03_hora-08-45.pdf",
+    "original_filename": "informe_general_fecha-2025-04-03_hora-08-45.pdf",
+    "file_path": "static/uploads/11e98a0d-f54c-4ab7-9a8d-2c407cdc7429_informe_general_fecha-2025-04-03_hora-08-45.pdf",
+    "file_type": "document",
+    "upload_date": "2025-04-16T06:32:01.384730"
   }
 ]

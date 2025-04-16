@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Registro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h4 class="mb-0">Registro de Usuario</h4>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                {% if success %}
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">¡Registro enviado correctamente!</h4>
+                    <p>Tu solicitud de registro ha sido enviada correctamente. Un administrador revisará tu solicitud y te notificará cuando tu cuenta sea aprobada.</p>
+                    <hr>
+                    <p class="mb-0">Puedes <a href="{{ url_for('auth.login') }}">iniciar sesión</a> una vez tu cuenta sea aprobada.</p>
+                </div>
+                {% else %}
+                <form method="post" action="{{ url_for('auth.register') }}">
+                    <div class="mb-3">
+                        <label for="dni" class="form-label">DNI <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="dni" name="dni" required>
+                        <div class="form-text">Introduce tu DNI sin espacios ni guiones.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        <div class="form-text">Introduce tu nombre y apellidos.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                        <div class="form-text">La contraseña debe tener al menos 8 caracteres.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmar contraseña <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="8" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Registrarse</button>
+                    </div>
+                </form>
+                {% endif %}
+                
+                <div class="mt-3 text-center">
+                    <p>¿Ya tienes una cuenta? <a href="{{ url_for('auth.login') }}">Iniciar sesión</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Información importante</h5>
+            </div>
+            <div class="card-body">
+                <p>Tu registro deberá ser aprobado por un administrador antes de que puedas acceder al sistema.</p>
+                <p>Recibirás un correo electrónico cuando tu cuenta sea aprobada.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.getElementById('password');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        if (passwordField.value !== confirmPasswordField.value) {
+            e.preventDefault();
+            alert('Las contraseñas no coinciden');
+        }
+    });
+});
+</script>
+{% endblock %}
