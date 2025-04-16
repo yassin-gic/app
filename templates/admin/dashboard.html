@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Panel de Administración</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h1 class="display-4">{{ pending_users|length }}</h1>
+                                    <p class="lead">Usuarios pendientes</p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="#pending-users" class="btn btn-outline-primary">Ver detalles</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h1 class="display-4">{{ total_users }}</h1>
+                                    <p class="lead">Usuarios totales</p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="#user-management" class="btn btn-outline-primary">Gestionar usuarios</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h1 class="display-4">{{ total_certificates }}</h1>
+                                    <p class="lead">Certificados digitales</p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="#certificate-management" class="btn btn-outline-primary">Gestionar certificados</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users pending approval section -->
+    <div class="row mb-4" id="pending-users">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Usuarios pendientes de aprobación</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>DNI</th>
+                                    <th>Nombre completo</th>
+                                    <th>Email</th>
+                                    <th>Fecha registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in pending_users %}
+                                <tr>
+                                    <td>{{ user.dni }}</td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.created_at }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-success" 
+                                                    onclick="approveUser({{ user.id }})"
+                                                    data-user-id="{{ user.id }}">
+                                                <i class="fas fa-check me-1"></i> Aprobar
+                                            </button>
+                                            <button type="button" class="btn btn-danger" 
+                                                    onclick="rejectUser({{ user.id }})"
+                                                    data-user-id="{{ user.id }}">
+                                                <i class="fas fa-times me-1"></i> Rechazar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No hay usuarios pendientes de aprobación.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User management section -->
+    <div class="row mb-4" id="user-management">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Gestión de usuarios</h5>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                            <i class="fas fa-plus me-1"></i> Nuevo usuario
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if all_users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>DNI</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in all_users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.dni }}</td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.status == 'approved' %}
+                                        <span class="badge bg-success">Aprobado</span>
+                                        {% elif user.status == 'pending' %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                        {% elif user.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rechazado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-primary">Administrador</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Usuario</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    onclick="viewUserDetails({{ user.id }})"
+                                                    data-bs-toggle="modal" data-bs-target="#userDetailsModal"
+                                                    data-user-id="{{ user.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if not user.is_admin or current_user.id == user.id %}
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="deleteUser({{ user.id }})"
+                                                    data-user-id="{{ user.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">No hay usuarios registrados.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate management section -->
+    <div class="row mb-4" id="certificate-management">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Gestión de certificados digitales</h5>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createCertificateModal">
+                            <i class="fas fa-plus me-1"></i> Nuevo certificado
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if certificates %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha creación</th>
+                                    <th>Fecha caducidad</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cert in certificates %}
+                                <tr>
+                                    <td>{{ cert.id }}</td>
+                                    <td>{{ cert.user_name }}</td>
+                                    <td>{{ cert.name }}</td>
+                                    <td>{{ cert.created_at }}</td>
+                                    <td>{{ cert.expires_at }}</td>
+                                    <td>
+                                        {% if cert.status == 'active' %}
+                                        <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Revocado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    onclick="viewCertDetails({{ cert.id }})"
+                                                    data-bs-toggle="modal" data-bs-target="#certDetailsModal"
+                                                    data-cert-id="{{ cert.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if cert.status == 'active' %}
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    onclick="revokeCertificate({{ cert.id }})"
+                                                    data-cert-id="{{ cert.id }}">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">No hay certificados digitales registrados.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Crear nuevo usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-user-form" action="{{ url_for('admin.create_user') }}" method="post">
+                    <div class="mb-3">
+                        <label for="new_dni" class="form-label">DNI <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="new_dni" name="dni" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_email" class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="new_email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_full_name" class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="new_full_name" name="full_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="new_password" name="password" minlength="8" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="new_is_admin" name="is_admin">
+                        <label class="form-check-label" for="new_is_admin">Es administrador</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="create-user-form" class="btn btn-primary">Crear usuario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">Detalles del usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="user-details-content">
+                    <!-- User details will be loaded here -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createCertificateModal" tabindex="-1" aria-labelledby="createCertificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCertificateModalLabel">Crear nuevo certificado digital</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-certificate-form" action="{{ url_for('admin.create_certificate') }}" method="post">
+                    <div class="mb-3">
+                        <label for="cert_user_id" class="form-label">Usuario <span class="text-danger">*</span></label>
+                        <select class="form-select" id="cert_user_id" name="user_id" required>
+                            <option value="" selected disabled>Seleccionar usuario</option>
+                            {% for user in approved_users %}
+                            <option value="{{ user.id }}">{{ user.full_name }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cert_name" class="form-label">Nombre del certificado <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cert_name" name="cert_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cert_validity" class="form-label">Validez (días) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="cert_validity" name="validity_period" min="1" max="3650" value="365" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cert_data" class="form-label">Datos del certificado <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="cert_data" name="cert_data" rows="5" required></textarea>
+                        <div class="form-text">Introduce los datos del certificado en formato Base64.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="create-certificate-form" class="btn btn-primary">Crear certificado</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Function to approve a user
+function approveUser(userId) {
+    if (confirm('¿Estás seguro de que deseas aprobar a este usuario?')) {
+        fetch(`/admin/users/${userId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Usuario aprobado correctamente');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al aprobar al usuario');
+        });
+    }
+}
+
+// Function to reject a user
+function rejectUser(userId) {
+    if (confirm('¿Estás seguro de que deseas rechazar a este usuario?')) {
+        fetch(`/admin/users/${userId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Usuario rechazado correctamente');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al rechazar al usuario');
+        });
+    }
+}
+
+// Function to view user details
+function viewUserDetails(userId) {
+    const contentElement = document.getElementById('user-details-content');
+    contentElement.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    fetch(`/admin/users/${userId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(user => {
+            // Format date
+            const createdDate = new Date(user.created_at);
+            const formattedDate = createdDate.toLocaleDateString() + ' ' + 
+                                 createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Format status
+            let statusBadge = '';
+            if (user.status === 'approved') {
+                statusBadge = '<span class="badge bg-success">Aprobado</span>';
+            } else if (user.status === 'pending') {
+                statusBadge = '<span class="badge bg-warning">Pendiente</span>';
+            } else if (user.status === 'rejected') {
+                statusBadge = '<span class="badge bg-danger">Rechazado</span>';
+            }
+            
+            // Format role
+            const roleBadge = user.is_admin ? 
+                '<span class="badge bg-primary">Administrador</span>' : 
+                '<span class="badge bg-secondary">Usuario</span>';
+            
+            contentElement.innerHTML = `
+                <dl class="row">
+                    <dt class="col-sm-4">ID:</dt>
+                    <dd class="col-sm-8">${user.id}</dd>
+                    
+                    <dt class="col-sm-4">DNI:</dt>
+                    <dd class="col-sm-8">${user.dni}</dd>
+                    
+                    <dt class="col-sm-4">Nombre:</dt>
+                    <dd class="col-sm-8">${user.full_name}</dd>
+                    
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">${user.email}</dd>
+                    
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">${statusBadge}</dd>
+                    
+                    <dt class="col-sm-4">Rol:</dt>
+                    <dd class="col-sm-8">${roleBadge}</dd>
+                    
+                    <dt class="col-sm-4">Fecha registro:</dt>
+                    <dd class="col-sm-8">${formattedDate}</dd>
+                </dl>
+            `;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            contentElement.innerHTML = `
+                <div class="alert alert-danger">
+                    Error al cargar los detalles del usuario.
+                </div>
+            `;
+        });
+}
+
+// Function to delete a user
+function deleteUser(userId) {
+    if (confirm('¿Estás seguro de que deseas eliminar a este usuario? Esta acción no se puede deshacer.')) {
+        fetch(`/admin/users/${userId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Usuario eliminado correctamente');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar al usuario');
+        });
+    }
+}
+
+// Function to view certificate details
+function viewCertDetails(certId) {
+    // Similar to viewUserDetails but for certificates
+    alert('Ver detalles del certificado ' + certId);
+}
+
+// Function to revoke a certificate
+function revokeCertificate(certId) {
+    if (confirm('¿Estás seguro de que deseas revocar este certificado? Esta acción no se puede deshacer.')) {
+        fetch(`/admin/certificates/${certId}/revoke`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Certificado revocado correctamente');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al revocar el certificado');
+        });
+    }
+}
+</script>
+{% endblock %}

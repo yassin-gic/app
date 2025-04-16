@@ -1,7 +1,7 @@
 import os
 import logging
 
-from flask import Flask
+from flask import Flask, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Setup logging
@@ -19,5 +19,6 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload size
 # Ensure upload directory exists
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-# Import routes
-from routes import *  # noqa: F401,E402
+# Initialize data stores
+from data_store import init_data_files
+init_data_files()

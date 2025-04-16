@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Certificados Digitales{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Mis Certificados Digitales</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Aquí puedes ver y gestionar tus certificados digitales para firma electrónica.</p>
+                    
+                    {% if certificates %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha creación</th>
+                                    <th>Fecha caducidad</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cert in certificates %}
+                                <tr>
+                                    <td class="cert-id">{{ cert.id }}</td>
+                                    <td>{{ cert.name }}</td>
+                                    <td>{{ cert.created_at }}</td>
+                                    <td>{{ cert.expires_at }}</td>
+                                    <td>
+                                        {% if cert.status == 'active' %}
+                                        <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Revocado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    onclick="viewCertDetails('{{ cert.id }}')"
+                                                    data-bs-toggle="modal" data-bs-target="#certDetailsModal"
+                                                    data-cert-id="{{ cert.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success"
+                                                    onclick="useForSigning('{{ cert.id }}')"
+                                                    data-cert-id="{{ cert.id }}"
+                                                    {% if cert.status != 'active' %}disabled{% endif %}>
+                                                <i class="fas fa-pen-fancy"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No tienes certificados digitales.
+                        <p class="mt-2">Para obtener un certificado digital, ponte en contacto con el administrador del sistema.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4 d-flex justify-content-center">
+                        <a href="{{ url_for('signature_page') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-pen-fancy me-1"></i> Ir a firmar
+                        </a>
+                        <a href="{{ url_for('user.profile') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Volver al perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Certificate Details Modal -->
+<div class="modal fade" id="certDetailsModal" tabindex="-1" aria-labelledby="certDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="certDetailsModalLabel">Detalles del Certificado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cert-details-content">
+                    <!-- Certificate details will be loaded here -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewCertDetails(certId) {
+    const contentElement = document.getElementById('cert-details-content');
+    contentElement.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    fetch(`/api/certificates/${certId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(cert => {
+            // Format dates
+            const createdDate = new Date(cert.created_at);
+            const expiresDate = new Date(cert.expires_at);
+            
+            const formattedCreatedDate = createdDate.toLocaleDateString() + ' ' + 
+                                        createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const formattedExpiresDate = expiresDate.toLocaleDateString() + ' ' + 
+                                        expiresDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Format status
+            let statusBadge = cert.status === 'active' ? 
+                '<span class="badge bg-success">Activo</span>' : 
+                '<span class="badge bg-danger">Revocado</span>';
+            
+            contentElement.innerHTML = `
+                <dl class="row">
+                    <dt class="col-sm-4">ID del certificado:</dt>
+                    <dd class="col-sm-8">${cert.id}</dd>
+                    
+                    <dt class="col-sm-4">Nombre:</dt>
+                    <dd class="col-sm-8">${cert.name}</dd>
+                    
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">${statusBadge}</dd>
+                    
+                    <dt class="col-sm-4">Fecha de creación:</dt>
+                    <dd class="col-sm-8">${formattedCreatedDate}</dd>
+                    
+                    <dt class="col-sm-4">Fecha de caducidad:</dt>
+                    <dd class="col-sm-8">${formattedExpiresDate}</dd>
+                </dl>
+                
+                <div class="mt-3">
+                    <h6>Datos del certificado:</h6>
+                    <div class="border rounded p-3 bg-light">
+                        <pre class="mb-0"><code>${cert.certificate_data}</code></pre>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            contentElement.innerHTML = `
+                <div class="alert alert-danger">
+                    Error al cargar los detalles del certificado.
+                </div>
+            `;
+        });
+}
+
+function useForSigning(certId) {
+    // Store the certificate ID in localStorage
+    localStorage.setItem('selected_certificate_id', certId);
+    
+    // Navigate to the signature page
+    window.location.href = "{{ url_for('signature_page') }}";
+}
+</script>
+{% endblock %}
